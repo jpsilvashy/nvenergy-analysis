@@ -1,0 +1,39 @@
+version: '3'
+
+services:
+  jupyterhub:
+    build: .
+    container_name: jupyterhub
+    restart: always
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - jupyterhub_data:/data
+      - ./jupyterhub_config.py:/srv/jupyterhub/jupyterhub_config.py:ro
+      - ./data:/home/jovyan/data:ro
+    environment:
+      - DOCKER_NETWORK_NAME=jupyterhub
+      - JUPYTER_ENABLE_LAB=yes
+    ports:
+      - "8000:8000"
+    networks:
+      - jupyterhub
+
+  db:
+    image: postgres:13
+    container_name: jupyterhub-db
+    restart: always
+    environment:
+      POSTGRES_DB: jupyterhub
+      POSTGRES_USER: jupyterhub
+      POSTGRES_PASSWORD: jupyterhubpassword
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - jupyterhub
+
+volumes:
+  jupyterhub_data:
+  postgres_data:
+
+networks:
+  jupyterhub:

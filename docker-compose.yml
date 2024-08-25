@@ -11,25 +11,31 @@ services:
       - ./jupyterhub_config.py:/srv/jupyterhub/jupyterhub_config.py:ro
       - ./data:/home/jovyan/data:ro
     environment:
+      - JOVYAN_PASSWORD=jupyterhub
       - DOCKER_NETWORK_NAME=jupyterhub
       - JUPYTER_ENABLE_LAB=yes
     ports:
       - "8000:8000"
+      - "8081:8081"
     networks:
       - jupyterhub
+    depends_on:
+      - db
 
   db:
     image: postgres:13
     container_name: jupyterhub-db
     restart: always
     environment:
+      POSTGRES_USER: jovyan
       POSTGRES_DB: jupyterhub
-      POSTGRES_USER: jupyterhub
-      POSTGRES_PASSWORD: jupyterhubpassword
+      POSTGRES_PASSWORD: jupyterhub
     volumes:
       - postgres_data:/var/lib/postgresql/data
+      - ./init-db.sh:/docker-entrypoint-initdb.d/init-db.sh
     networks:
       - jupyterhub
+
 
 volumes:
   jupyterhub_data:

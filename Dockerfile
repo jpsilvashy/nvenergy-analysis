@@ -14,7 +14,11 @@ RUN pip3 install --no-cache-dir \
     jupyter_client \
     sqlalchemy \
     psycopg2-binary \
-    jupyterlab
+    jupyterlab \
+    pandas \
+    matplotlib \
+    seaborn \
+    scipy
 
 # Remove conflicting Node.js packages
 RUN apt-get update && apt-get remove -y nodejs npm libnode-dev \
@@ -36,15 +40,17 @@ RUN mkdir -p /data /home/jovyan/work /home/jovyan/data \
 
 WORKDIR /home/jovyan
 
-# Copy the Python script
-COPY --chown=jovyan:users nv_energy_analysis.py /app/
+# Copy the Python script and data files
+COPY --chown=jovyan:users nv_energy_analysis.py /home/jovyan/work/
+COPY --chown=jovyan:users utils.py /home/jovyan/work/
+COPY --chown=jovyan:users main.ipynb /home/jovyan/work/
+COPY --chown=jovyan:users data/usage-data-*.zip /home/jovyan/work/data/
 
-# Copy the data files
-COPY --chown=jovyan:users data/usage-data-*.zip /app/data/
+# Copy start script
+COPY start.sh /usr/local/bin/start.sh
+RUN chmod +x /usr/local/bin/start.sh && \
+    chown jovyan:users /usr/local/bin/start.sh
 
 USER jovyan
 
-# Upgrade JupyterHub database
-RUN jupyterhub upgrade-db
-
-CMD ["jupyterhub", "-f", "/srv/jupyterhub/jupyterhub_config.py"]
+CMD ["/usr/local/bin/start.sh"]
